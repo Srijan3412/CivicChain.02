@@ -11,6 +11,7 @@ interface BudgetItem {
   amount: number;
   ward: number;
   year: number;
+  account_budget_a?: string; // ✅ Added so we can use account_budget_a
 }
 
 interface AiInsightsProps {
@@ -24,40 +25,47 @@ const AiInsights: React.FC<AiInsightsProps> = ({ budgetData, department }) => {
   const { toast } = useToast();
 
   const getAiInsights = async () => {
-    if (!budgetData || budgetData.length === 0) {
+    // ✅ Validate data more robustly
+    const filteredData = budgetData.filter(
+      item => item && !isNaN(Number(item.amount)) && Number(item.amount) > 0
+    );
+
+    if (filteredData.length === 0) {
       toast({
-        variant: "destructive",
-        title: "No Data",
-        description: "Please fetch budget data first before analyzing.",
+        variant: 'destructive',
+        title: 'No Valid Data',
+        description: 'Please fetch or select valid budget data before analyzing.',
       });
       return;
     }
 
     setLoading(true);
-    
+
     try {
+      // ✅ Pass account_budget_a instead of glcode
       const { data, error } = await supabase.functions.invoke('get-ai-insights', {
         body: {
-          budgetData,
-          department
-        }
+          budgetData: filteredData.map(item => ({
+            ...item,
+            key: item.account_budget_a || item.category, // Use account_budget_a if available
+          })),
+          department,
+        },
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setInsights(data.insights);
       toast({
-        title: "AI Analysis Complete",
-        description: "Generated insights for your budget data.",
+        title: 'AI Analysis Complete',
+        description: 'Generated actionable insights for the selected data.',
       });
     } catch (error) {
       console.error('Error getting AI insights:', error);
       toast({
-        variant: "destructive",
-        title: "Analysis Failed",
-        description: "Failed to generate AI insights. Please try again.",
+        variant: 'destructive',
+        title: 'Analysis Failed',
+        description: 'Something went wrong while generating insights. Please try again later.',
       });
     } finally {
       setLoading(false);
@@ -68,33 +76,35 @@ const AiInsights: React.FC<AiInsightsProps> = ({ budgetData, department }) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5" />
+          <Brain className="h-5 w-5 text-primary" />
           AI-Powered Budget Insights
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <Button 
-            onClick={getAiInsights} 
-            disabled={loading || !budgetData.length}
+          <Button
+            onClick={getAiInsights}
+            disabled={loading || budgetData.length === 0}
             className="w-full md:w-auto"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {loading ? 'Analyzing...' : 'Analyze Budget with AI'}
           </Button>
-          
+
           {insights && (
             <div className="mt-6 p-4 bg-accent/20 rounded-lg border border-accent animate-in slide-in-from-bottom-4 duration-500">
-              <h4 className="font-semibold mb-2 text-accent-foreground">AI Analysis Results:</h4>
+              <h4 className="font-semibold mb-2 text-accent-foreground">
+                AI Analysis Results:
+              </h4>
               <div className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">
                 {insights}
               </div>
             </div>
           )}
-          
+
           {!insights && !loading && (
             <p className="text-muted-foreground text-sm">
-              Click the analyze button to get AI-powered insights about spending patterns, 
+              Click the button above to get AI-powered insights about spending patterns, 
               anomalies, and optimization opportunities for this department's budget.
             </p>
           )}
