@@ -1,17 +1,16 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { v4 } from "https://deno.land/std/uuid/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Type': 'application/json'
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -20,115 +19,45 @@ serve(async (req) => {
 
     const formData = await req.formData();
     const csvFile = formData.get('file') as File;
+    if (!csvFile) return new Response(JSON.stringify({ error: 'No CSV file provided' }), { status: 400, headers: corsHeaders });
 
-    if (!csvFile) {
-      return new Response(
-        JSON.stringify({ error: 'No CSV file provided' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Read and parse CSV content
     const csvContent = await csvFile.text();
     const lines = csvContent.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
-    
-    console.log('CSV headers:', headers);
 
-    // Validate required columns
-    const requiredColumns = ['Ward', 'Year', 'Category', 'Amount'];
-    const missingColumns = requiredColumns.filter(col => 
-      !headers.some(h => h.toLowerCase() === col.toLowerCase())
-    );
-
-    if (missingColumns.length > 0) {
-      return new Response(
-        JSON.stringify({ 
-          error: `Missing required columns: ${missingColumns.join(', ')}` 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Parse data rows
-    const budgetData = [];
+    // Map CSV headers to table fields
+    const budgetData: any[] = [];
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
-      if (values.length === headers.length) {
-        const row: any = {};
-        
-        headers.forEach((header, index) => {
-          const normalizedHeader = header.toLowerCase();
-          if (normalizedHeader === 'ward') {
-            row.ward = parseInt(values[index]);
-          } else if (normalizedHeader === 'year') {
-            row.year = parseInt(values[index]);
-          } else if (normalizedHeader === 'category') {
-            row.category = values[index];
-          } else if (normalizedHeader === 'amount') {
-            row.amount = parseFloat(values[index].replace(/[$,]/g, ''));
-          }
-        });
+      if (values.length !== headers.length) continue;
 
-        // Validate parsed data
-        if (row.ward && row.year && row.category && !isNaN(row.amount)) {
-          budgetData.push(row);
-        }
+      const row: any = {};
+      headers.forEach((header, idx) => {
+        const h = header.toLowerCase();
+        if (h === 'ward') row.account = values[idx];             // Map Ward -> account
+        else if (h === 'year') row.glcode = values[idx];        // Map Year -> glcode
+        else if (h === 'category') row.account_budget_a = values[idx];
+        else if (h === 'amount') row.used_amt = parseFloat(values[idx].replace(/[$,]/g, ''));
+      });
+
+      row.remaining_amt = row.used_amt ? 0 : 0; // Or calculate if you have budget_a
+      if (row.account && row.glcode && row.account_budget_a && !isNaN(row.used_amt)) {
+        budgetData.push(row);
       }
     }
 
-    console.log(`Parsed ${budgetData.length} valid budget records`);
+    if (budgetData.length === 0) return new Response(JSON.stringify({ error: 'No valid budget data found' }), { status: 400, headers: corsHeaders });
 
-    if (budgetData.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No valid budget data found in CSV' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Insert data into municipal_budget table
-    const { data, error } = await supabase
-      .from('municipal_budget')
-      .insert(budgetData);
-
+    const { data, error } = await supabase.from('municipal_budget').insert(budgetData);
     if (error) {
-      console.error('Error inserting budget data:', error);
-      return new Response(
-        JSON.stringify({ error: 'Failed to import budget data' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      console.error('Supabase insert error:', error);
+      return new Response(JSON.stringify({ error: 'Failed to import budget data', details: error.message }), { status: 500, headers: corsHeaders });
     }
 
-    return new Response(
-      JSON.stringify({ 
-        message: `Successfully imported ${budgetData.length} budget records`,
-        recordsImported: budgetData.length
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ message: `Imported ${budgetData.length} records successfully` }), { headers: corsHeaders });
 
-  } catch (error) {
-    console.error('Error in import-csv function:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+  } catch (err) {
+    console.error('Internal server error:', err);
+    return new Response(JSON.stringify({ error: 'Internal server error', details: err.message }), { status: 500, headers: corsHeaders });
   }
 });
