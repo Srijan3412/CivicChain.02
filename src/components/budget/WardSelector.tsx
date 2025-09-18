@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -8,30 +8,52 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
-interface WardSelectorProps {
+interface ZoneSelectorProps {
   value: string;
   onChange: (value: string) => void;
+  data: Array<{
+    account: string;
+    glcode: string;
+    account_budget_a: string;
+    budget_a: number;
+    used_amt: number;
+    remaining_amt: number;
+  }>;
 }
 
-const WardSelector: React.FC<WardSelectorProps> = ({ value, onChange }) => {
+const ZoneSelector: React.FC<ZoneSelectorProps> = ({ value, onChange, data }) => {
+  const [zones, setZones] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Extract unique accounts containing "ZONE"
+    const zoneAccounts = Array.from(
+      new Set(
+        data
+          .filter(item => item.account.toUpperCase().includes('ZONE'))
+          .map(item => item.account)
+      )
+    );
+    setZones(zoneAccounts);
+  }, [data]);
+
   return (
     <div className="space-y-2">
-      <Label htmlFor="ward-select">Ward</Label>
+      <Label htmlFor="zone-select">Zone</Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id="ward-select" className="bg-background">
-          <SelectValue placeholder="Select a ward" />
+        <SelectTrigger id="zone-select" className="bg-background">
+          <SelectValue placeholder="Select a zone" />
         </SelectTrigger>
         <SelectContent className="bg-background border border-border z-50">
-          <SelectItem value="all">All Wards</SelectItem>
-          <SelectItem value="1">Ward 1</SelectItem>
-          <SelectItem value="2">Ward 2</SelectItem>
-          <SelectItem value="3">Ward 3</SelectItem>
-          <SelectItem value="4">Ward 4</SelectItem>
-          <SelectItem value="5">Ward 5</SelectItem>
+          <SelectItem value="all">All Zones</SelectItem>
+          {zones.map((zone, idx) => (
+            <SelectItem key={idx} value={zone}>
+              {zone}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
   );
 };
 
-export default WardSelector;
+export default ZoneSelector;
