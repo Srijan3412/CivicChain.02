@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -9,21 +9,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
+// ✅ Match Supabase schema exactly
 interface BudgetItem {
   id: string;
   account: string;
   glcode: string;
   account_budget_a: string;
-  used_amt: number;
-  remaining_amt: number;
-  budget_a?: number | null;
-  created_at?: string;
+  used_amt: number;       // numeric in DB -> number in TS
+  remaining_amt: number;  // numeric in DB -> number in TS
+  budget_a?: number | null; // optional since it can be NULL
+  created_at?: string;    // optional timestamp from DB
   file_id?: string | null;
   user_id?: string | null;
 }
@@ -34,41 +30,7 @@ interface BudgetTableProps {
 }
 
 const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => {
-  const { toast } = useToast();
-  const [zones, setZones] = useState<string[]>([]);
-  const [selectedZone, setSelectedZone] = useState<string>("all");
-  const [loadingZones, setLoadingZones] = useState(true);
-
-  // ✅ Fetch unique zones from budgetData
-  useEffect(() => {
-    try {
-      setLoadingZones(true);
-      const uniqueZones = Array.from(
-        new Set(
-          budgetData
-            .map((item) => item.account)
-            .filter((account) => account.toUpperCase().includes("ZONE"))
-        )
-      ).sort();
-      setZones(uniqueZones);
-    } catch (err) {
-      console.error("Error fetching zones:", err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load zones.",
-      });
-    } finally {
-      setLoadingZones(false);
-    }
-  }, [budgetData, toast]);
-
-  // ✅ Filter budgetData based on selected zone
-  const filteredBudgetData =
-    selectedZone === "all"
-      ? budgetData
-      : budgetData.filter((item) => item.account === selectedZone);
-
+  // ✅ Local helper to format INR properly
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -76,7 +38,8 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
       minimumFractionDigits: 0,
     }).format(amount);
 
-  const validBudgetData = filteredBudgetData.filter(
+  // ✅ Ensure only rows with valid numeric used_amt are displayed
+  const validBudgetData = budgetData.filter(
     (item) =>
       item &&
       typeof item.account_budget_a === "string" &&
@@ -84,6 +47,7 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
       Number(item.used_amt) > 0
   );
 
+  // ✅ Total used amount for percentage calculation
   const totalUsedAmount = validBudgetData.reduce(
     (sum, item) => sum + Number(item.used_amt),
     0
@@ -95,31 +59,6 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
         <CardTitle>Budget Data – {department}</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* ✅ Zone Selector */}
-        <div className="mb-4 space-y-2">
-          <Label htmlFor="zone-select">Zone</Label>
-          <Select
-            value={selectedZone}
-            onValueChange={setSelectedZone}
-            disabled={loadingZones}
-          >
-            <SelectTrigger id="zone-select" className="bg-background">
-              <SelectValue
-                placeholder={loadingZones ? "Loading zones..." : "Select a zone"}
-              />
-              {loadingZones && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
-            </SelectTrigger>
-            <SelectContent className="bg-background border border-border z-50 max-h-60">
-              <SelectItem value="all">All Zones</SelectItem>
-              {zones.map((zone) => (
-                <SelectItem key={zone} value={zone}>
-                  {zone}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <Table>
           <TableCaption>
             Municipal budget allocation by category (from municipal_budget table)
@@ -142,15 +81,24 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
 
                 return (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.account_budget_a}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(amount)}</TableCell>
+                    {/* ✅ Display account_budget_a */}
+                    <TableCell className="font-medium">
+                      {item.account_budget_a}
+                    </TableCell>
+                    {/* ✅ Display formatted INR */}
+                    <TableCell className="text-right">
+                      {formatCurrency(amount)}
+                    </TableCell>
                     <TableCell className="text-right">{percentage}%</TableCell>
                   </TableRow>
                 );
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                <TableCell
+                  colSpan={3}
+                  className="text-center text-muted-foreground py-8"
+                >
                   No valid budget data available
                 </TableCell>
               </TableRow>
