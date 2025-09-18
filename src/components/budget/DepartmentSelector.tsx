@@ -11,24 +11,25 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface DepartmentSelectorProps {
+
+interface ZoneSelectorProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ value, onChange }) => {
-  const [departments, setDepartments] = useState<string[]>([]);
+const ZoneSelector: React.FC<ZoneSelectorProps> = ({ value, onChange }) => {
+  const [zones, setZones] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchDepartments();
+    fetchZones();
   }, []);
 
-  const fetchDepartments = async () => {
+  const fetchZones = async () => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('municipal_budget')
         .select('account')
@@ -40,24 +41,28 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ value, onChange
       }
 
       if (!data) {
-        setDepartments([]);
+        setZones([]);
         return;
       }
 
-      // Extract unique departments and sort alphabetically
-      const uniqueDepartments = [...new Set(data.map((item: any) => item.account))]
-        .filter(Boolean)
-        .sort();
+      // Filter accounts containing "ZONE" and get unique values
+      const uniqueZones = Array.from(
+        new Set(
+          data
+            .map((item: any) => item.account)
+            .filter((account: string) => account.toUpperCase().includes('ZONE'))
+        )
+      ).sort();
 
-      setDepartments(uniqueDepartments);
-    } catch (error) {
-      console.error('Error fetching departments:', error);
+      setZones(uniqueZones);
+    } catch (err) {
+      console.error('Error fetching zones:', err);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load departments. Please try again.",
+        description: "Failed to load zones. Please try again.",
       });
-      setDepartments([]);
+      setZones([]);
     } finally {
       setLoading(false);
     }
@@ -65,19 +70,19 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ value, onChange
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="department-select">Department</Label>
+      <Label htmlFor="zone-select">Zone</Label>
       <Select value={value} onValueChange={onChange} disabled={loading}>
-        <SelectTrigger id="department-select" className="bg-background">
-          <SelectValue placeholder={loading ? "Loading departments..." : "Select a department"} />
+        <SelectTrigger id="zone-select" className="bg-background">
+          <SelectValue placeholder={loading ? "Loading zones..." : "Select a zone"} />
           {loading && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
         </SelectTrigger>
         <SelectContent className="bg-background border border-border z-50 max-h-60">
-          {departments.length === 0 && !loading ? (
-            <div className="p-2 text-sm text-muted-foreground">No departments found</div>
+          {zones.length === 0 && !loading ? (
+            <div className="p-2 text-sm text-muted-foreground">No zones found</div>
           ) : (
-            departments.map((department) => (
-              <SelectItem key={department} value={department}>
-                {department}
+            zones.map((zone) => (
+              <SelectItem key={zone} value={zone}>
+                {zone}
               </SelectItem>
             ))
           )}
@@ -87,4 +92,4 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ value, onChange
   );
 };
 
-export default DepartmentSelector;
+export default ZoneSelector;
