@@ -10,13 +10,13 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatIndianCurrency, formatCompactNumber } from '@/lib/utils';
 
-// ✅ Match your Supabase schema
+// ✅ Match Supabase schema exactly
 interface BudgetItem {
   id: string;
   account_budget_a: string;
@@ -36,11 +36,11 @@ const COLORS = [
   '#ffc658',
   '#d45087',
   '#2ca02c',
-  '#ff7f0e'
+  '#ff7f0e',
 ];
 
 const BudgetChart: React.FC<BudgetChartProps> = ({ budgetData }) => {
-  // ✅ Filter + transform data to match recharts format
+  // ✅ Filter + transform data for Recharts
   const validBudgetData = budgetData.filter(
     (item) =>
       item &&
@@ -60,10 +60,8 @@ const BudgetChart: React.FC<BudgetChartProps> = ({ budgetData }) => {
   // ✅ Keep top 8 in pie, group rest as "Others"
   const topData = sortedData.slice(0, 8);
   const othersAmount = sortedData.slice(8).reduce((sum, item) => sum + item.amount, 0);
-
-  const pieData = othersAmount > 0
-    ? [...topData, { category: 'Others', amount: othersAmount }]
-    : topData;
+  const pieData =
+    othersAmount > 0 ? [...topData, { category: 'Others', amount: othersAmount }] : topData;
 
   if (chartData.length === 0) {
     return (
@@ -113,7 +111,7 @@ const BudgetChart: React.FC<BudgetChartProps> = ({ budgetData }) => {
                   contentStyle={{
                     backgroundColor: 'hsl(var(--background))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
+                    borderRadius: '6px',
                   }}
                 />
                 <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -136,10 +134,7 @@ const BudgetChart: React.FC<BudgetChartProps> = ({ budgetData }) => {
                       labelLine={false}
                     >
                       {pieData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip
@@ -147,7 +142,7 @@ const BudgetChart: React.FC<BudgetChartProps> = ({ budgetData }) => {
                       contentStyle={{
                         backgroundColor: 'hsl(var(--background))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '6px'
+                        borderRadius: '6px',
                       }}
                     />
                     <Legend
@@ -160,7 +155,7 @@ const BudgetChart: React.FC<BudgetChartProps> = ({ budgetData }) => {
                 </ResponsiveContainer>
               </div>
 
-              {/* ✅ Right side legend with percentages */}
+              {/* ✅ Right-side budget breakdown with percentages */}
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Budget Breakdown</h4>
                 <div className="space-y-2 max-h-80 overflow-y-auto">
