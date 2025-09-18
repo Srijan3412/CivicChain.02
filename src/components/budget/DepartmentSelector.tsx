@@ -28,7 +28,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ value, onChange
   const fetchDepartments = async () => {
     try {
       setLoading(true);
-
+      
       const { data, error } = await supabase
         .from('municipal_budget')
         .select('account')
@@ -68,16 +68,12 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ value, onChange
       <Label htmlFor="department-select">Department</Label>
       <Select value={value} onValueChange={onChange} disabled={loading}>
         <SelectTrigger id="department-select" className="bg-background">
-          <SelectValue
-            placeholder={loading ? "Loading departments..." : "Select a department"}
-          />
+          <SelectValue placeholder={loading ? "Loading departments..." : "Select a department"} />
           {loading && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
         </SelectTrigger>
         <SelectContent className="bg-background border border-border z-50 max-h-60">
           {departments.length === 0 && !loading ? (
-            <div className="p-2 text-sm text-muted-foreground">
-              No departments found
-            </div>
+            <div className="p-2 text-sm text-muted-foreground">No departments found</div>
           ) : (
             departments.map((department) => (
               <SelectItem key={department} value={department}>
