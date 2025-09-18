@@ -125,6 +125,7 @@ ${JSON.stringify(formattedData.map(item => ({
       left: formatNumber(item.remaining),
     })), null, 2)}
 
+
 TASK:
 Write a short, clear report for a citizen.
 
