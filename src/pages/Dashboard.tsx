@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Search, BarChart3, Brain } from 'lucide-react';
+import { Loader2, LogOut, Search, BarChart3, Brain } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext'; // ✅ Added language support
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import SummaryCards from '@/components/budget/SummaryCards';
@@ -13,7 +13,7 @@ import BudgetChart from '@/components/budget/BudgetChart';
 import AiInsights from '@/components/budget/AiInsights';
 import { CsvImport } from '@/components/budget/CsvImport';
 import DepartmentSelector from '@/components/budget/DepartmentSelector';
-import WardSelector from '@/components/budget/WardSelector'; // ✅ Added Ward Selector
+import WardSelector from '@/components/budget/WardSelector';
 
 interface BudgetItem {
   id: string;
@@ -34,12 +34,12 @@ interface BudgetSummary {
 
 const Dashboard = () => {
   const [department, setDepartment] = useState('');
-  const [ward, setWard] = useState('all'); // ✅ Added ward filter
+  const [ward, setWard] = useState('all');
   const [budgetData, setBudgetData] = useState<BudgetItem[]>([]);
   const [summary, setSummary] = useState<BudgetSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const { user, signOut } = useAuth();
-  const { t } = useLanguage(); // ✅ Translation support
+  const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -60,20 +60,22 @@ const Dashboard = () => {
     }
 
     setLoading(true);
-
+    
     try {
       const { data, error } = await supabase.functions.invoke('get-budget', {
         body: {
-          department,
-          ward, // ✅ Pass ward to backend function
-        },
+          department: department,
+          ward: ward
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       setBudgetData(data.budgetData || []);
       setSummary(data.summary || null);
-
+      
       toast({
         title: t('common.loading'),
         description: t('dashboard.noDataMessage', `Found ${data.budgetData?.length || 0} budget items for ${department}.`),
@@ -95,7 +97,9 @@ const Dashboard = () => {
     navigate('/');
   };
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -103,12 +107,8 @@ const Dashboard = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              {t('dashboard.title')}
-            </h1>
-            <p className="text-muted-foreground">
-              {t('nav.welcome')}, {user.email}
-            </p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('dashboard.title')}</h1>
+            <p className="text-muted-foreground">{t('nav.welcome')}, {user.email}</p>
           </div>
         </div>
       </header>
@@ -132,11 +132,11 @@ const Dashboard = () => {
                   <DepartmentSelector value={department} onChange={setDepartment} />
                 </div>
                 <div className="md:col-span-1">
-                  <WardSelector value={ward} onChange={setWard} /> {/* ✅ Ward dropdown */}
+                  <WardSelector value={ward} onChange={setWard} />
                 </div>
                 <div className="md:col-span-1">
-                  <Button
-                    onClick={fetchBudgetData}
+                  <Button 
+                    onClick={fetchBudgetData} 
                     disabled={loading || !department}
                     className="w-full bg-gradient-primary hover:opacity-90 shadow-md"
                     size="lg"
@@ -161,7 +161,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content Grid */}
         {budgetData.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 animate-fade-in">
             <BudgetTable budgetData={budgetData} department={department} />
