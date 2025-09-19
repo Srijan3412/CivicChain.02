@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatIndianCurrency } from '@/lib/utils';
 import { useLanguage } from "@/contexts/LanguageContext"; // ✅ Added translation like reference
 
 // ✅ Match Supabase schema exactly
