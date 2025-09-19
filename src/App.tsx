@@ -15,10 +15,13 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+
+
+
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      {/* ✅ Wrap everything in LanguageProvider for multilingual support */}
       <AuthProvider>
         <TooltipProvider>
           <Toaster />

@@ -59,20 +59,18 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {t("table.category")} – {department}
-        </CardTitle>
+        <CardTitle>{t('table.category')} - {department}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
-          <TableCaption>{t("chart.budgetDistribution")}</TableCaption>
+          <TableCaption>
+            {t('chart.budgetDistribution')}
+          </TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("table.category")}</TableHead>
-              <TableHead className="text-right">{t("common.amount")}</TableHead>
-              <TableHead className="text-right">
-                {t("common.percentage")}
-              </TableHead>
+              <TableHead>{t('table.category')}</TableHead>
+              <TableHead className="text-right">{t('common.amount')}</TableHead>
+              <TableHead className="text-right">{t('common.percentage')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

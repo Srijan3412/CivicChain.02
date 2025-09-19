@@ -60,39 +60,31 @@ const Navbar = () => {
             })}
           </div>
 
+
+
           {/* Language Selector & Auth Section */}
           <div className="flex items-center space-x-4">
-            <LanguageSelector /> {/* ✅ Added multilingual dropdown */}
+            <LanguageSelector />
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-sm font-medium text-foreground">
-                    {t('nav.welcome')}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {user.email}
-                  </span>
+                  <span className="text-sm font-medium text-foreground">{t('nav.welcome')}</span>
+                  <span className="text-xs text-muted-foreground">{user.email}</span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={signOut}
-                  className="hover-scale"
-                >
+                <Button variant="outline" size="sm" onClick={signOut} className="hover-scale">
                   {t('nav.signOut')}
                 </Button>
               </div>
             ) : (
-              <Button
-                asChild
-                size="sm"
-                className="bg-gradient-primary hover:opacity-90 shadow-md"
-              >
+              <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90 shadow-md">
                 <Link to="/auth">{t('nav.signIn')}</Link>
               </Button>
             )}
           </div>
         </div>
+
+
+
 
         {/* Mobile Navigation */}
         <div className="md:hidden flex space-x-1 pb-3 overflow-x-auto">

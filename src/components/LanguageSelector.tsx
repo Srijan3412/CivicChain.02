@@ -27,6 +27,7 @@ const LanguageSelector: React.FC = () => {
             value={language.code}
             className="cursor-pointer hover:bg-accent/50 focus:bg-accent"
           >
+            
             <div className="flex items-center gap-2">
               <span className="font-medium">{language.nativeName}</span>
               <span className="text-xs text-muted-foreground">({language.name})</span>
