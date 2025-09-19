@@ -12,7 +12,7 @@ import BudgetChart from '@/components/budget/BudgetChart';
 import AiInsights from '@/components/budget/AiInsights';
 import { CsvImport } from '@/components/budget/CsvImport';
 import DepartmentSelector from '@/components/budget/DepartmentSelector';
-import WardSelector from '@/components/budget/WardSelector';
+
 
 interface BudgetItem {
   id: string;
@@ -33,7 +33,6 @@ interface BudgetSummary {
 
 const Dashboard = () => {
   const [department, setDepartment] = useState('');
-  const [ward, setWard] = useState('all');
   const [budgetData, setBudgetData] = useState<BudgetItem[]>([]);
   const [summary, setSummary] = useState<BudgetSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,7 +62,7 @@ const Dashboard = () => {
       const { data, error } = await supabase.functions.invoke('get-budget', {
         body: {
           department: department,
-          ward: ward
+
         }
       });
 
@@ -128,9 +127,6 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div className="md:col-span-1">
                   <DepartmentSelector value={department} onChange={setDepartment} />
-                </div>
-                <div className="md:col-span-1">
-                  <WardSelector value={ward} onChange={setWard} />
                 </div>
                 <div className="md:col-span-1">
                   <Button 
