@@ -13,7 +13,6 @@ const Navbar = () => {
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-    { path: '/ward', label: 'Wards', icon: MapPin },
     { path: '/insights', label: 'AI Insights', icon: Brain },
     { path: '/feedback', label: 'Feedback', icon: MessageSquare },
   ];
