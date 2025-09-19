@@ -3,18 +3,22 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Brain, MessageSquare, Home, MapPin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const Navbar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage(); // ✅ for translations
 
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-    { path: '/insights', label: 'AI Insights', icon: Brain },
-    { path: '/feedback', label: 'Feedback', icon: MessageSquare },
+    { path: '/', label: t('nav.home'), icon: Home },
+    { path: '/dashboard', label: t('nav.dashboard'), icon: BarChart3 },
+    { path: '/ward', label: t('nav.wards'), icon: MapPin }, // ✅ Added Ward
+    { path: '/insights', label: t('nav.insights'), icon: Brain },
+    { path: '/feedback', label: t('nav.feedback'), icon: MessageSquare },
   ];
 
   return (
@@ -26,7 +30,9 @@ const Navbar = () => {
             <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
               <BarChart3 className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">Municipal Portal</span>
+            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Municipal Portal
+            </span>
           </Link>
 
           {/* Navigation Links */}
@@ -36,13 +42,13 @@ const Navbar = () => {
               return (
                 <Button
                   key={item.path}
-                  variant={isActive(item.path) ? "default" : "ghost"}
+                  variant={isActive(item.path) ? 'default' : 'ghost'}
                   asChild
                   size="sm"
                   className={`h-10 transition-all duration-200 ${
-                    isActive(item.path) 
-                      ? "bg-gradient-primary shadow-md" 
-                      : "hover:bg-accent/50"
+                    isActive(item.path)
+                      ? 'bg-gradient-primary shadow-md'
+                      : 'hover:bg-accent/50'
                   }`}
                 >
                   <Link to={item.path} className="flex items-center space-x-2">
@@ -54,21 +60,35 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Auth Section */}
+          {/* Language Selector & Auth Section */}
           <div className="flex items-center space-x-4">
+            <LanguageSelector /> {/* ✅ Added multilingual dropdown */}
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-sm font-medium text-foreground">Welcome back</span>
-                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {t('nav.welcome')}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {user.email}
+                  </span>
                 </div>
-                <Button variant="outline" size="sm" onClick={signOut} className="hover-scale">
-                  Sign Out
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={signOut}
+                  className="hover-scale"
+                >
+                  {t('nav.signOut')}
                 </Button>
               </div>
             ) : (
-              <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90 shadow-md">
-                <Link to="/auth">Sign In</Link>
+              <Button
+                asChild
+                size="sm"
+                className="bg-gradient-primary hover:opacity-90 shadow-md"
+              >
+                <Link to="/auth">{t('nav.signIn')}</Link>
               </Button>
             )}
           </div>
@@ -81,16 +101,19 @@ const Navbar = () => {
             return (
               <Button
                 key={item.path}
-                variant={isActive(item.path) ? "default" : "ghost"}
+                variant={isActive(item.path) ? 'default' : 'ghost'}
                 asChild
                 size="sm"
                 className={`flex-shrink-0 transition-all duration-200 ${
-                  isActive(item.path) 
-                    ? "bg-gradient-primary shadow-md" 
-                    : "hover:bg-accent/50"
+                  isActive(item.path)
+                    ? 'bg-gradient-primary shadow-md'
+                    : 'hover:bg-accent/50'
                 }`}
               >
-                <Link to={item.path} className="flex flex-col items-center space-y-1 min-w-max px-3">
+                <Link
+                  to={item.path}
+                  className="flex flex-col items-center space-y-1 min-w-max px-3"
+                >
                   <Icon className="h-4 w-4" />
                   <span className="text-xs">{item.label.split(' ')[0]}</span>
                 </Link>

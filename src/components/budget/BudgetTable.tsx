@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext"; // ✅ Added translation like reference
 
 // ✅ Match Supabase schema exactly
 interface BudgetItem {
@@ -16,10 +17,10 @@ interface BudgetItem {
   account: string;
   glcode: string;
   account_budget_a: string;
-  used_amt: number;       // numeric in DB -> number in TS
-  remaining_amt: number;  // numeric in DB -> number in TS
-  budget_a?: number | null; // optional since it can be NULL
-  created_at?: string;    // optional timestamp from DB
+  used_amt: number;
+  remaining_amt: number;
+  budget_a?: number | null;
+  created_at?: string;
   file_id?: string | null;
   user_id?: string | null;
 }
@@ -30,6 +31,8 @@ interface BudgetTableProps {
 }
 
 const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => {
+  const { t } = useLanguage(); // ✅ For i18n support like reference
+
   // ✅ Local helper to format INR properly
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-IN", {
@@ -56,18 +59,20 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Budget Data – {department}</CardTitle>
+        <CardTitle>
+          {t("table.category")} – {department}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
-          <TableCaption>
-            Municipal budget allocation by category (from municipal_budget table)
-          </TableCaption>
+          <TableCaption>{t("chart.budgetDistribution")}</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-right">Used Amount</TableHead>
-              <TableHead className="text-right">% of Total</TableHead>
+              <TableHead>{t("table.category")}</TableHead>
+              <TableHead className="text-right">{t("common.amount")}</TableHead>
+              <TableHead className="text-right">
+                {t("common.percentage")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -81,14 +86,16 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
 
                 return (
                   <TableRow key={item.id}>
-                    {/* ✅ Display account_budget_a */}
+                    {/* ✅ Show account_budget_a */}
                     <TableCell className="font-medium">
                       {item.account_budget_a}
                     </TableCell>
+
                     {/* ✅ Display formatted INR */}
                     <TableCell className="text-right">
                       {formatCurrency(amount)}
                     </TableCell>
+
                     <TableCell className="text-right">{percentage}%</TableCell>
                   </TableRow>
                 );
@@ -99,7 +106,7 @@ const BudgetTable: React.FC<BudgetTableProps> = ({ budgetData, department }) => 
                   colSpan={3}
                   className="text-center text-muted-foreground py-8"
                 >
-                  No valid budget data available
+                  {t("table.noValidData")}
                 </TableCell>
               </TableRow>
             )}
